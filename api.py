@@ -26,5 +26,5 @@ def get_marks():
     marks = [get_marks_for_name(name) for name in names]  # Fetch marks for each name
     return jsonify({"marks": marks})
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     app.run(debug=True)
