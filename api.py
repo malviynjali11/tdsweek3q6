@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS globally
 
 # Load the JSON data
 with open('q-vercel-python.json', 'r') as f:
@@ -13,35 +15,29 @@ def get_marks():
     names = request.args.getlist('name')
 
     try:
-        # Check if data is a list
-        if isinstance(data, list):
-            # Find marks for each name in the list and calculate their sum
-            total_marks = 0
-            missing_names = []
+        # Find marks for each name in the list and calculate their sum
+        total_marks = 0
+        missing_names = []
 
-            for name in names:
-                marks = next((item['marks'] for item in data if item['name'] == name), None)
-                if marks is not None:
-                    total_marks += marks
-                else:
-                    missing_names.append(name)
+        for name in names:
+            marks = next((item['marks'] for item in data if item['name'] == name), None)
+            if marks is not None:
+                total_marks += marks
+            else:
+                missing_names.append(name)
 
-            # If any names are not found, include them in the response
-            if missing_names:
-                return jsonify({
-                    "error": "Some names not found",
-                    "missing_names": missing_names,
-                    "total_marks": total_marks
-                }), 404
+        # If any names are not found, include them in the response
+        if missing_names:
+            return jsonify({
+                "error": "Some names not found",
+                "missing_names": missing_names,
+                "total_marks": total_marks
+            }), 404
 
-            return jsonify({"total_marks": total_marks})
-
-        else:
-            return jsonify({"error": "Invalid JSON structure"}), 500
+        return jsonify({"total_marks": total_marks})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
