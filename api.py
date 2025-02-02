@@ -9,30 +9,39 @@ with open('q-vercel-python.json', 'r') as f:
 
 @app.route('/api', methods=['GET'])
 def get_marks():
-    # Get query parameters X and Y
-    x = request.args.get('x')
-    y = request.args.get('y')
+    # Get the list of names from the query parameters
+    names = request.args.getlist('name')
 
     try:
-        # Check if data is a list or dictionary
+        # Check if data is a list
         if isinstance(data, list):
-            # Search for x and y in the list
-            x_marks = next((item['marks'] for item in data if item['name'] == x), None)
-            y_marks = next((item['marks'] for item in data if item['name'] == y), None)
-        elif isinstance(data, dict):
-            # Use .get() if data is a dictionary
-            x_marks = data.get(x)
-            y_marks = data.get(y)
+            # Find marks for each name in the list and calculate their sum
+            total_marks = 0
+            missing_names = []
+
+            for name in names:
+                marks = next((item['marks'] for item in data if item['name'] == name), None)
+                if marks is not None:
+                    total_marks += marks
+                else:
+                    missing_names.append(name)
+
+            # If any names are not found, include them in the response
+            if missing_names:
+                return jsonify({
+                    "error": "Some names not found",
+                    "missing_names": missing_names,
+                    "total_marks": total_marks
+                }), 404
+
+            return jsonify({"total_marks": total_marks})
+
         else:
             return jsonify({"error": "Invalid JSON structure"}), 500
 
-        # Handle cases where names are not found
-        if x_marks is None or y_marks is None:
-            return jsonify({"error": "One or both names not found"}), 404
-
-        return jsonify({"marks": [x_marks, y_marks]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
